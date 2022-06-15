@@ -1,0 +1,9 @@
+1 // abrir conta
+2 // poupança
+3 // depositar
+6 // selecionar conta
+110 // valor do deposito
+2 // sacar
+6 // selecionar conta
+100 // valor de saque
+99

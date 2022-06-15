@@ -43,7 +43,7 @@ public class AplicacaoTeste {
         testeLogin();
     }
 
-    static void testeLogin(){
+    static void testeLogin() {
         assert pessoaService.login("User1") : "Login falhou";
     }
 
@@ -54,19 +54,19 @@ public class AplicacaoTeste {
         Pessoa p2 = pessoaService.create(new PessoaFisica().setCpf("123").setNome("Teste"));
         assert p2.getId() == 7 : "GenericDAO não gerou o id corretamente";
 
-        Conta c1 = contaService.abrirConta(new PessoaFisica(), new ContaCorrente(), TipoConta.CORRENTE);
+        Conta c1 = contaService.validarDadosEAbrirConta(new PessoaFisica(), new ContaCorrente(), TipoConta.CORRENTE);
         assert c1.getId() == 8 : "GenericDAO não gerou o id corretamente";
-        
-        Conta c2 = contaService.abrirConta(new PessoaFisica(), new ContaCorrente(), TipoConta.CORRENTE);
+
+        Conta c2 = contaService.validarDadosEAbrirConta(new PessoaFisica(), new ContaCorrente(), TipoConta.CORRENTE);
         assert c2.getId() == 9 : "GenericDAO não gerou o id corretamente";
     }
 
     static void testeAbrirConta() {
         try {
-            contaService.abrirConta(new PessoaJuridica(), new ContaPoupanca(), TipoConta.POUPANCA);
+            contaService.validarDadosEAbrirConta(new PessoaJuridica(), new ContaPoupanca(), TipoConta.POUPANCA);
             assert false : "Não deve criar conta poupança PJ";
         } catch (UserException e) {
-            // e.printStackTrace();
+            // System.out.println(e.getMessage());
             assert e.getMessage().compareTo(UserMessage.PJ_NAO_CRIA_POUPANCA.getMessage()) == 0
                     : "Não deve criar conta poupança PJ, mensagem incorreta";
         }
@@ -74,23 +74,53 @@ public class AplicacaoTeste {
 
     static void testeSaque() {
         ContaPoupanca contaPoupancaSaldo1000 = new ContaPoupanca().setSaldo(BigDecimal.valueOf(1000));
-        ContaInvestimento contaInvestimentoSaldo1000 = new ContaInvestimento().setPessoa(new PessoaJuridica())
+        ContaInvestimento contaInvestimentoPJSaldo1000 = new ContaInvestimento().setPessoa(new PessoaJuridica())
                 .setSaldo(BigDecimal.valueOf(1000));
 
-        assert contaService.sacar(contaPoupancaSaldo1000, BigDecimal.valueOf(4000)) == false
-                : "Não deve sacar além do saldo da conta";
-        assert contaService.sacar(contaPoupancaSaldo1000, BigDecimal.valueOf(1000)) == false
-                : "Não deve sacar além do saldo da conta";
-        assert contaService.sacar(contaPoupancaSaldo1000, BigDecimal.valueOf(900)) == true : "Saque autorizado";
+        try {
+            contaService.sacar(contaPoupancaSaldo1000, BigDecimal.valueOf(4000));
+            assert false : "Não deve sacar além do saldo da conta";
+        } catch (UserException e) {
+            assert true;
+        }
+        try {
+            contaService.sacar(contaPoupancaSaldo1000, BigDecimal.valueOf(1000));
+            assert false : "Não deve sacar além do saldo da conta";
+        } catch (UserException e) {
+            assert true;
+        }
+
+        try {
+            contaService.sacar(contaPoupancaSaldo1000, BigDecimal.valueOf(900));
+        } catch (UserException e) {
+            System.out.println(e.getMessage());
+            assert false : "Saque deve ser autorizado";
+        }
+        
         assert contaPoupancaSaldo1000.getSaldo().compareTo(BigDecimal.valueOf(100)) == 0
                 : "Saldo poupança após saque sem tarifa";
 
-        assert contaService.sacar(contaInvestimentoSaldo1000, BigDecimal.valueOf(4000)) == false
-                : "Não deve sacar além do saldo da conta";
-        assert contaService.sacar(contaInvestimentoSaldo1000, BigDecimal.valueOf(1000)) == false
-                : "Não deve sacar além do saldo da conta";
-        assert contaService.sacar(contaInvestimentoSaldo1000, BigDecimal.valueOf(900)) == true : "Saque autorizado";
-        assert contaInvestimentoSaldo1000.getSaldo().compareTo(BigDecimal.valueOf(95.5)) == 0
+        try {
+            contaService.sacar(contaInvestimentoPJSaldo1000, BigDecimal.valueOf(4000));
+            assert false : "Não deve sacar além do saldo da conta";
+        } catch (UserException e) {
+            assert true;
+        }
+        try {
+            contaService.sacar(contaInvestimentoPJSaldo1000, BigDecimal.valueOf(1000));
+            assert false : "Não deve sacar além do saldo da conta";
+        } catch (UserException e) {
+            assert true;
+        }
+
+        try {
+            contaService.sacar(contaInvestimentoPJSaldo1000, BigDecimal.valueOf(900));
+        } catch (UserException e) {
+            System.out.println(e.getMessage());
+            assert false : "Saque deve ser autorizado";
+        }
+
+        assert contaInvestimentoPJSaldo1000.getSaldo().compareTo(BigDecimal.valueOf(95.5)) == 0
                 : "Saldo conta investimento após saque com tarifa";
     }
 
@@ -102,7 +132,7 @@ public class AplicacaoTeste {
             assert contaPoupancaTesteDeposito.getSaldo().compareTo(BigDecimal.valueOf(100)) == 0
                     : "Depósito deve ser efetuado";
         } catch (UserException e) {
-            // e.printStackTrace();
+            System.out.println(e.getMessage());
             assert contaPoupancaTesteDeposito.getSaldo().compareTo(BigDecimal.valueOf(100)) == 0
                     : "Depósito deve ser efetuado";
         }
@@ -112,7 +142,7 @@ public class AplicacaoTeste {
             assert contaPoupancaTesteDeposito.getSaldo().compareTo(BigDecimal.valueOf(100)) == 0
                     : "Valores de depósito negativos não devem ser aceitos";
         } catch (UserException e) {
-            // e.printStackTrace();
+            // System.out.println(e.getMessage());
             assert contaPoupancaTesteDeposito.getSaldo().compareTo(BigDecimal.valueOf(100)) == 0
                     : "Valores de depósito negativos não devem ser aceitos";
         }

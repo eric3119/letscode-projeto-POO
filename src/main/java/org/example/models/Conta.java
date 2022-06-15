@@ -32,4 +32,9 @@ public abstract class Conta extends Model {
 
         return ret;
     }
+
+    @Override
+    public String toString() {
+        return String.format("Conta {id = %d; saldo = %s}", this.getId(), this.getSaldo().toString());
+    }
 }

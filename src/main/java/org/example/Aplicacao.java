@@ -1,10 +1,14 @@
 package org.example;
 
+import java.math.BigDecimal;
 import java.util.Arrays;
+import java.util.InputMismatchException;
+import java.util.List;
 import java.util.Scanner;
 
 import org.example.enums.OperacaoSistema;
 import org.example.enums.TipoConta;
+import org.example.exceptions.NegotialException;
 import org.example.exceptions.UserException;
 import org.example.helpers.ContaHelper;
 import org.example.models.Conta;
@@ -18,14 +22,19 @@ public class Aplicacao {
     private static Scanner scanner = new Scanner(System.in);
 
     public static void main(String[] args) {
-        OperacaoSistema operacao;
+        OperacaoSistema operacao = null;
 
         do {
             do {
-                System.out.println("Digite o comando\n");
+                System.out.println("\nDigite o comando\n");
                 Arrays.stream(OperacaoSistema.values()).map(opr -> opr.getFormatted()).forEach(System.out::println);
 
-                operacao = OperacaoSistema.fromInt(scanner.nextInt());
+                try {
+                    operacao = OperacaoSistema.fromInt(scanner.nextInt());
+                } catch (InputMismatchException e) {
+                    System.out.println("Digite um número inteiro");
+                }
+
                 scanner.nextLine();
             } while (operacao == null);
 
@@ -42,8 +51,10 @@ public class Aplicacao {
                     abrirConta(pessoaService.getById(1));
                     break;
                 case SACAR:
+                    sacar(pessoaService.getById(1));
                     break;
                 case DEPOSITAR:
+                    depositar(pessoaService.getById(1));
                     break;
                 case TRANSFERIR:
                     break;
@@ -54,12 +65,12 @@ public class Aplicacao {
                 case ENCERRAR:
                     break;
             }
-        } catch (UserException e) {
+        } catch (UserException | NegotialException e) {
             System.out.println(e.getMessage());
         }
     }
 
-    private static void abrirConta(Pessoa pessoa) throws UserException {
+    private static void abrirConta(Pessoa pessoa) throws NegotialException, UserException {
         TipoConta tipoConta;
         do {
             System.out.println("Selecione o tipo de conta\n");
@@ -69,11 +80,54 @@ public class Aplicacao {
             scanner.nextLine();
         } while (tipoConta == null);
 
-        contaService.validaCriarConta(pessoa, tipoConta);
-        Conta conta = ContaHelper.getDadosAberturaConta(pessoa, tipoConta);
+        Conta contaASerEfetivada = ContaHelper.getDadosAberturaConta(pessoa, tipoConta);
+        Conta contaCriada = contaService.validarDadosEAbrirConta(pessoa, contaASerEfetivada, tipoConta);
+        if (contaCriada == null)
+            throw new NegotialException("Erro ao criar conta");
 
-        contaService.abrirConta(pessoa, conta, tipoConta);
+        System.out.printf("\n------------------\nConta criada com id: %d\n------------------\n", contaCriada.getId());
     }
 
-    
+    private static void sacar(Pessoa pessoa) throws NegotialException, UserException {
+        List<Conta> contasUsuario = contaService.getAll(pessoa);
+        Conta contaSelecionada;
+        do {
+
+            System.out.println("Selecione o id da conta\n");
+            contasUsuario.forEach(System.out::println);
+
+            int idConta = scanner.nextInt();
+            scanner.nextLine();
+            contaSelecionada = contasUsuario.stream()
+                    .filter(conta -> conta.getId() == idConta).findFirst().orElse(null);
+        } while (contaSelecionada == null);
+
+        System.out.println("Digite o valor");
+        BigDecimal valor = BigDecimal.valueOf(scanner.nextDouble());
+        scanner.nextLine();
+
+        contaService.sacar(contaSelecionada, valor);
+    }
+
+    private static void depositar(Pessoa pessoa) throws NegotialException, UserException {
+        List<Conta> contasUsuario = contaService.getAll(pessoa);
+        Conta contaSelecionada;
+        do {
+
+            System.out.println("Selecione o id da conta\n");
+            contasUsuario.forEach(System.out::println);
+
+            int idConta = scanner.nextInt();
+            scanner.nextLine();
+            contaSelecionada = contasUsuario.stream()
+                    .filter(conta -> conta.getId() == idConta).findFirst().orElse(null);
+        } while (contaSelecionada == null);
+
+        System.out.println("Digite o valor");
+        BigDecimal valor = BigDecimal.valueOf(scanner.nextDouble());
+        scanner.nextLine();
+
+        contaService.depositar(contaSelecionada, valor);
+    }
+
 }

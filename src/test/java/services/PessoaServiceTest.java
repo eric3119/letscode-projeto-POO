@@ -37,10 +37,10 @@ public class PessoaServiceTest {
         Pessoa p2 = pessoaService.create(new PessoaFisica().setCpf("123").setNome("Teste"));
         assertEquals(7, p2.getId());
 
-        Conta c1 = contaService.abrirConta(new PessoaFisica(), new ContaCorrente(), TipoConta.CORRENTE);
+        Conta c1 = contaService.validarDadosEAbrirConta(new PessoaFisica(), new ContaCorrente(), TipoConta.CORRENTE);
         assertEquals(8, c1.getId());
 
-        Conta c2 = contaService.abrirConta(new PessoaFisica(), new ContaCorrente(), TipoConta.CORRENTE);
+        Conta c2 = contaService.validarDadosEAbrirConta(new PessoaFisica(), new ContaCorrente(), TipoConta.CORRENTE);
         assertEquals(9, c2.getId());
     }
 }

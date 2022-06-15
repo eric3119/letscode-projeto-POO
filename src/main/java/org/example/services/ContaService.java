@@ -1,6 +1,8 @@
 package org.example.services;
 
 import java.math.BigDecimal;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import org.example.dao.ContaDao;
 import org.example.enums.TipoConta;
@@ -25,31 +27,30 @@ public class ContaService {
 
     private ContaDao contaDao = ContaDao.getInstance();
 
+    public List<Conta> getAll(Pessoa pessoa) {
+        return this.contaDao.getAll().stream()
+                .filter(conta -> conta
+                        .getPessoa().getId() == pessoa.getId())
+                .collect(Collectors.toList());
+    }
+
     public void validaCriarConta(Pessoa pessoa, TipoConta tipoConta) throws UserException {
         if (pessoa instanceof PessoaJuridica && tipoConta == TipoConta.POUPANCA)
             throw new UserException(UserMessage.PJ_NAO_CRIA_POUPANCA.getMessage());
     }
 
-    public Conta abrirConta(Pessoa pessoa, Conta conta, TipoConta tipoConta) throws UserException {
+    public Conta validarDadosEAbrirConta(Pessoa pessoa, Conta conta, TipoConta tipoConta) throws UserException {
         validaCriarConta(pessoa, tipoConta);
-        switch (tipoConta) {
-            case POUPANCA:
-                return contaDao.create(conta);
-            case CORRENTE:
-                return contaDao.create(conta);
-            case INVESTIMENTO:
-                return null;
-        }
-        return null;
+        return contaDao.create(conta);
     }
 
-    public boolean sacar(Conta conta, BigDecimal valor) {
+    public void sacar(Conta conta, BigDecimal valor) throws UserException {
 
         if (conta.getPessoa() instanceof PessoaJuridica) {
-            return sacar(conta, valor, BigDecimal.valueOf(0.005));
+            sacar(conta, valor, BigDecimal.valueOf(0.005));
+        } else {
+            sacar(conta, valor, BigDecimal.valueOf(0));
         }
-
-        return sacar(conta, valor, BigDecimal.valueOf(0));
     }
 
     public void depositar(Conta conta, BigDecimal valor) throws UserException {
@@ -72,14 +73,14 @@ public class ContaService {
         return BigDecimal.ZERO;
     }
 
-    private boolean sacar(Conta conta, BigDecimal valor, BigDecimal taxa) {
+    private void sacar(Conta conta, BigDecimal valor, BigDecimal taxa) throws UserException {
         BigDecimal novoSaldo = conta.getSaldo().subtract((valor.multiply((BigDecimal.valueOf(1).add(taxa)))));
+
         if (novoSaldo.compareTo(BigDecimal.valueOf(0)) > 0) {
             conta.setSaldo(novoSaldo);
             contaDao.update(conta);
-            return true;
+        } else {
+            throw new UserException("Saldo insuficiente");
         }
-
-        return false;
     }
 }
