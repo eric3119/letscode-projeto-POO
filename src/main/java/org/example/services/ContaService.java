@@ -34,6 +34,13 @@ public class ContaService {
                 .collect(Collectors.toList());
     }
 
+    public Conta getById(Pessoa pessoa, int idConta) {
+        return this.contaDao.getAll().stream()
+                .filter(conta -> conta
+                        .getPessoa().getId() == pessoa.getId() && conta.getId() == idConta)
+                .findFirst().orElse(null);
+    }
+
     public void validaCriarConta(Pessoa pessoa, TipoConta tipoConta) throws UserException {
         if (pessoa instanceof PessoaJuridica && tipoConta == TipoConta.POUPANCA)
             throw new UserException(UserMessage.PJ_NAO_CRIA_POUPANCA.getMessage());
@@ -61,22 +68,33 @@ public class ContaService {
         conta.setSaldo(novoSaldo);
     }
 
-    public boolean transferir() {
-        return false;
+    public void transferir(Pessoa pessoa, int idContaOrigem, int idContaDestino, BigDecimal valor) throws UserException {
+        Conta contaOrigem = getById(pessoa, idContaOrigem);
+        Conta contaDestino = this.contaDao.getById(idContaDestino);
+
+        if(contaOrigem == null) throw new UserException("Conta origem não encontrada");
+        if(contaDestino == null) throw new UserException("Conta destino não encontrada");
+
+        if(contaOrigem.getId() == contaDestino.getId()) throw new UserException("Contas são iguais");
+
+        this.sacar(contaOrigem, valor, BigDecimal.ZERO); // saque sem tarifa
+        this.depositar(contaDestino, valor);
     }
 
     public void investir() {
 
     }
 
-    public BigDecimal consultarSaldo() {
-        return BigDecimal.ZERO;
+    public BigDecimal consultarSaldo(Pessoa pessoa, int idConta) throws UserException {
+        Conta contaBusca = getById(pessoa, idConta);
+        if(contaBusca == null) throw new UserException("Conta não encontrada");
+        else return contaBusca.getSaldo();
     }
 
     private void sacar(Conta conta, BigDecimal valor, BigDecimal taxa) throws UserException {
         BigDecimal novoSaldo = conta.getSaldo().subtract((valor.multiply((BigDecimal.valueOf(1).add(taxa)))));
-
-        if (novoSaldo.compareTo(BigDecimal.valueOf(0)) > 0) {
+        
+        if (novoSaldo.compareTo(BigDecimal.ZERO) >= 0) {
             conta.setSaldo(novoSaldo);
             contaDao.update(conta);
         } else {

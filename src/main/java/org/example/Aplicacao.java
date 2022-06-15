@@ -57,10 +57,12 @@ public class Aplicacao {
                     depositar(pessoaService.getById(1));
                     break;
                 case TRANSFERIR:
+                    transferir(pessoaService.getById(1));
                     break;
                 case INVESTIR:
                     break;
                 case SALDO:
+                    saldo(pessoaService.getById(1));
                     break;
                 case ENCERRAR:
                     break;
@@ -128,6 +130,50 @@ public class Aplicacao {
         scanner.nextLine();
 
         contaService.depositar(contaSelecionada, valor);
+    }
+
+    private static void saldo(Pessoa pessoa) throws NegotialException, UserException {
+        List<Conta> contasUsuario = contaService.getAll(pessoa);
+        Conta contaSelecionada;
+        do {
+
+            System.out.println("Selecione o id da conta\n");
+            contasUsuario.forEach(System.out::println);
+
+            int idConta = scanner.nextInt();
+            scanner.nextLine();
+            contaSelecionada = contasUsuario.stream()
+                    .filter(conta -> conta.getId() == idConta).findFirst().orElse(null);
+        } while (contaSelecionada == null);
+
+        System.out.printf("\nSaldo da conta: %s\n", contaService.consultarSaldo(pessoa, contaSelecionada.getId()));
+    }
+
+    private static void transferir(Pessoa pessoa) throws NegotialException, UserException {
+        List<Conta> contasUsuario = contaService.getAll(pessoa);
+        Conta contaSelecionada;
+        do {
+
+            System.out.println("Selecione o id da conta\n");
+            contasUsuario.forEach(System.out::println);
+
+            int idConta = scanner.nextInt();
+            scanner.nextLine();
+            contaSelecionada = contasUsuario.stream()
+                    .filter(conta -> conta.getId() == idConta).findFirst().orElse(null);
+        } while (contaSelecionada == null);
+
+        System.out.println("Conta destino");
+        int idContaDestino = scanner.nextInt();
+        scanner.nextLine();
+
+        System.out.println("Digite o valor");
+        BigDecimal valor = BigDecimal.valueOf(scanner.nextDouble());
+        scanner.nextLine();
+
+        contaService.transferir(pessoa, contaSelecionada.getId(), idContaDestino, valor);
+
+        System.out.printf("\nSaldo da conta: %s\n", contaService.consultarSaldo(pessoa, contaSelecionada.getId()));
     }
 
 }

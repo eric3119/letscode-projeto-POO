@@ -1,9 +1,21 @@
 1 // abrir conta
 2 // poupança
+1 // abrir conta
+2 // poupança
 3 // depositar
 6 // selecionar conta
 110 // valor do deposito
 2 // sacar
 6 // selecionar conta
 100 // valor de saque
+6 // saldo
+6 // selecionar conta
+4 // transferir
+6 // conta origem
+7 // conta destino
+9,50 // valor
+6 // saldo
+6 // selecionar conta
+6 // saldo
+7 // selecionar conta
 99
