@@ -9,7 +9,7 @@ import org.example.models.Model;
 public abstract class GenericDao<T extends Model> {
 
     private static int lastID = 0;
-    
+
     private List<T> entities = new ArrayList<>();
 
     public List<T> getAll() {
@@ -24,16 +24,16 @@ public abstract class GenericDao<T extends Model> {
 
     public T getById(int id) {
         return entities.stream()
-            .filter(obj -> obj.getId() == id)
-            .findFirst()
-            .orElse(null);
+                .filter(obj -> obj.getId() == id)
+                .findFirst()
+                .orElse(null);
     }
 
     public T update(T entity) {
-        this.entities = entities.stream()
-            .filter(obj -> obj.getId() == entity.getId()).collect(Collectors.toList());
+        this.entities = this.entities.stream()
+                .filter(obj -> obj.getId() != entity.getId()).collect(Collectors.toList());
         this.entities.add(entity);
-        
+
         return entity;
     }
 }
