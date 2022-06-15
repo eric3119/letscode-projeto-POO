@@ -2,7 +2,9 @@ package org.example.models;
 
 import java.math.BigDecimal;
 
-public class ContaCorrente extends Conta {
+import org.example.interfaces.Limite;
+
+public class ContaCorrente extends Conta implements Limite {
     private BigDecimal limite;
 
     public BigDecimal getLimite() {

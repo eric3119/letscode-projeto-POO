@@ -2,7 +2,9 @@ package org.example.models;
 
 import java.math.BigDecimal;
 
-public class ContaInvestimento extends Conta {
+import org.example.interfaces.Rentabilidade;
+
+public class ContaInvestimento extends Conta implements Rentabilidade {
     private BigDecimal rendimentos;
 
     public BigDecimal getRendimentos() {

@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 import org.example.dao.ContaDao;
 import org.example.enums.TipoConta;
 import org.example.exceptions.UserException;
+import org.example.interfaces.TaxaSaque;
 import org.example.models.Conta;
 import org.example.models.Pessoa;
 import org.example.models.PessoaJuridica;
@@ -53,7 +54,7 @@ public class ContaService {
 
     public void sacar(Conta conta, BigDecimal valor) throws UserException {
 
-        if (conta.getPessoa() instanceof PessoaJuridica) {
+        if (conta.getPessoa() instanceof TaxaSaque) {
             sacar(conta, valor, BigDecimal.valueOf(0.005));
         } else {
             sacar(conta, valor, BigDecimal.valueOf(0));
